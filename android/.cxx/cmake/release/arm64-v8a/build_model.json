@@ -1,0 +1,77 @@
+{
+  "variant": {
+    "module": {
+      "rootBuildGradleFolder": "D:\\GITHUB\\DobbyPanorama\\dobby_panorama\\android",
+      "sdkFolder": "C:\\Users\\Uros\\AppData\\Local\\Android\\sdk",
+      "isNativeCompilerSettingsCacheEnabled": false,
+      "isBuildOnlyTargetAbiEnabled": true,
+      "splitsAbiFilterSet": [],
+      "intermediatesFolder": "D:\\GITHUB\\DobbyPanorama\\dobby_panorama\\build\\opencv_awesome\\intermediates",
+      "gradleModulePathName": ":opencv_awesome",
+      "moduleRootFolder": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android",
+      "makeFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\CMakeLists.txt",
+      "buildSystem": "CMAKE",
+      "compilerSettingsCacheFolder": "D:\\GITHUB\\DobbyPanorama\\dobby_panorama\\android\\.cxx",
+      "cxxFolder": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx",
+      "ndkFolder": "C:\\Users\\Uros\\AppData\\Local\\Android\\sdk\\ndk\\22.1.7171670",
+      "ndkVersion": "22.1.7171670",
+      "ndkSupportedAbiList": [
+        "ARMEABI_V7A",
+        "ARM64_V8A",
+        "X86",
+        "X86_64"
+      ],
+      "ndkDefaultAbiList": [
+        "ARMEABI_V7A",
+        "ARM64_V8A",
+        "X86",
+        "X86_64"
+      ],
+      "cmakeToolchainFile": "."
+    },
+    "buildSystemArgumentList": [
+      "-DANDROID_TOOLCHAIN\u003dclang++",
+      "-DANDROID_ARM_NEON\u003dTRUE",
+      "-DANDROID_STL\u003dc++_shared"
+    ],
+    "cFlagList": [],
+    "cppFlagsList": [
+      "-Wno-error\u003dformat-security",
+      "-frtti -fexceptions -std\u003dc++11"
+    ],
+    "variantName": "release",
+    "soFolder": "D:\\GITHUB\\DobbyPanorama\\dobby_panorama\\build\\opencv_awesome\\intermediates\\cmake\\release\\lib",
+    "objFolder": "D:\\GITHUB\\DobbyPanorama\\dobby_panorama\\build\\opencv_awesome\\intermediates\\cmake\\release\\obj",
+    "jsonFolder": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cmake\\release",
+    "gradleBuildOutputFolder": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cxx\\release",
+    "isDebuggableEnabled": false,
+    "validAbiList": [
+      "ARMEABI_V7A",
+      "ARM64_V8A",
+      "X86",
+      "X86_64"
+    ],
+    "buildTargetSet": []
+  },
+  "abi": "ARM64_V8A",
+  "abiPlatformVersion": 16,
+  "cxxBuildFolder": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cmake\\release\\arm64-v8a",
+  "jsonFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cmake\\release\\arm64-v8a\\android_gradle_build.json",
+  "gradleBuildOutputFolder": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cxx\\release\\arm64-v8a",
+  "objFolder": "D:\\GITHUB\\DobbyPanorama\\dobby_panorama\\build\\opencv_awesome\\intermediates\\cmake\\release\\obj\\arm64-v8a",
+  "buildCommandFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cmake\\release\\arm64-v8a\\build_command.txt",
+  "buildOutputFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cmake\\release\\arm64-v8a\\build_output.txt",
+  "modelOutputFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cmake\\release\\arm64-v8a\\build_model.json",
+  "cmake": {
+    "cmakeListsWrapperFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cxx\\release\\arm64-v8a\\CMakeLists.txt",
+    "toolchainWrapperFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cxx\\release\\arm64-v8a\\android_gradle_build.toolchain.cmake",
+    "buildGenerationStateFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cxx\\release\\arm64-v8a\\build_generation_state.json",
+    "cacheKeyFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cxx\\release\\arm64-v8a\\compiler_cache_key.json",
+    "compilerCacheUseFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cxx\\release\\arm64-v8a\\compiler_cache_use.json",
+    "compilerCacheWriteFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cxx\\release\\arm64-v8a\\compiler_cache_write.json",
+    "toolchainSettingsFromCacheFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cxx\\release\\arm64-v8a\\compiler_settings_cache.cmake",
+    "cmakeWrappingBaseFolder": "."
+  },
+  "jsonGenerationLoggingRecordFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cmake\\release\\arm64-v8a\\json_generation_record.json",
+  "compileCommandsJsonFile": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cmake\\release\\arm64-v8a\\compile_commands.json"
+}

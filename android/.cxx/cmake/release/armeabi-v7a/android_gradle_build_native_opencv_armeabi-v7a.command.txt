@@ -1,0 +1,8 @@
+Executable : C:\Users\Uros\AppData\Local\Android\sdk\cmake\3.6.4111459\bin\cmake.exe
+arguments : 
+--build
+C:\flutter\.pub-cache\git\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\android\.cxx\cmake\release\armeabi-v7a
+--target
+native_opencv
+jvmArgs : 
+

@@ -1,0 +1,13 @@
+# ninja log v5
+0	2182	0	CMakeFiles/native_opencv.dir/src/main/jni/native_opencv.cpp.o	2a28b3a93d732bb6
+2184	2246	0	D:/GITHUB/DobbyPanorama/dobby_panorama/build/opencv_awesome/intermediates/cmake/release/obj/arm64-v8a/libnative_opencv.so	9e6fd42156ff8786
+3	2185	0	CMakeFiles/native_opencv.dir/src/main/jni/native_opencv.cpp.o	2a28b3a93d732bb6
+2185	2248	0	D:/GITHUB/DobbyPanorama/dobby_panorama/build/opencv_awesome/intermediates/cmake/release/obj/arm64-v8a/libnative_opencv.so	9e6fd42156ff8786
+3	2129	0	CMakeFiles/native_opencv.dir/src/main/jni/native_opencv.cpp.o	2a28b3a93d732bb6
+2130	2198	0	D:/GITHUB/DobbyPanorama/dobby_panorama/build/opencv_awesome/intermediates/cmake/release/obj/arm64-v8a/libnative_opencv.so	9e6fd42156ff8786
+2	2103	0	CMakeFiles/native_opencv.dir/src/main/jni/native_opencv.cpp.o	2a28b3a93d732bb6
+2104	2170	0	D:/GITHUB/DobbyPanorama/dobby_panorama/build/opencv_awesome/intermediates/cmake/release/obj/arm64-v8a/libnative_opencv.so	9e6fd42156ff8786
+3	2223	0	CMakeFiles/native_opencv.dir/src/main/jni/native_opencv.cpp.o	2a28b3a93d732bb6
+2223	2292	0	D:/GITHUB/DobbyPanorama/dobby_panorama/build/opencv_awesome/intermediates/cmake/release/obj/arm64-v8a/libnative_opencv.so	9e6fd42156ff8786
+3	2125	0	CMakeFiles/native_opencv.dir/src/main/jni/native_opencv.cpp.o	2a28b3a93d732bb6
+2126	2191	0	D:/GITHUB/DobbyPanorama/dobby_panorama/build/opencv_awesome/intermediates/cmake/release/obj/arm64-v8a/libnative_opencv.so	9e6fd42156ff8786

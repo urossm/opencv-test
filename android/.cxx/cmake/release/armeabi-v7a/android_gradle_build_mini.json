@@ -1,0 +1,21 @@
+{
+  "buildFiles": [
+    "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\CMakeLists.txt"
+  ],
+  "cleanCommands": [
+    "C:\\Users\\Uros\\AppData\\Local\\Android\\sdk\\cmake\\3.6.4111459\\bin\\cmake.exe --build C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cmake\\release\\armeabi-v7a --target clean"
+  ],
+  "libraries": {
+    "native_opencv-Release-armeabi-v7a": {
+      "artifactName": "native_opencv",
+      "buildCommand": "C:\\Users\\Uros\\AppData\\Local\\Android\\sdk\\cmake\\3.6.4111459\\bin\\cmake.exe --build C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\.cxx\\cmake\\release\\armeabi-v7a --target native_opencv",
+      "abi": "armeabi-v7a",
+      "output": "D:\\GITHUB\\DobbyPanorama\\dobby_panorama\\build\\opencv_awesome\\intermediates\\cmake\\release\\obj\\armeabi-v7a\\libnative_opencv.so"
+    },
+    "lib_opencv-Release-armeabi-v7a": {
+      "artifactName": "lib_opencv",
+      "abi": "armeabi-v7a",
+      "output": "C:\\flutter\\.pub-cache\\git\\opencv_awesome-8f7e3ff2db83bfff3a96843c64982e6f569c2ef7\\android\\src\\main\\jniLibs\\armeabi-v7a\\libopencv_java4.so"
+    }
+  }
+}
