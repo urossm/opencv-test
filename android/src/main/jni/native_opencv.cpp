@@ -6,15 +6,6 @@
 using namespace cv;
 using namespace std;
 
-// PARAMETRI KOJI SE PODESAVAJU
-int heightAfterResize = 600; //visina slike nakon resizovanja
-int blendingAngle = 3; // [1-360] ugao pod kojim su slikane 2 slike
-int blendingAngleStep = blendingAngle; // Broj za koji se ugao povecava kad se slika preskace
-int blendingWidthPercent = 50; // [0-100] sirina blendovanog dela u procentima
-int imgNumb = 360; // Broj slika
-string finalName = "PanoramaFinal.jpg"; // Ime finalne slike
-string topName = "PanoramaTop.jpg";
-string bottomName = "PanoramaBottom.jpg";
 
 // Avoiding name mangling
 extern "C" {
@@ -57,211 +48,139 @@ struct tokens: ctype<char>
 
     //------------------------MOJE FUNKCIJE--------------------------------
 
-    void blendHorizontal(Mat input1, Mat input2, Mat& output)
-    {
-    	int width1 = input1.cols;
-    	int height1 = input1.rows;
-    	int width2 = input2.cols;
-    	int height2 = input2.rows;
-
-    	float blendingAnglePixels = blendingAngle * 0.02731 * width2; //2.731% je konstanta koja otprilike predstavlja procenat sirine slike za 1 ugao rotacije
-    	float blendingArea = blendingAnglePixels * blendingWidthPercent * 0.01; //preklop u procentima
-
-    	int cropWidth = (width2 - blendingAnglePixels) / 2;
-
-    	input1 = input1(Rect(0, 0, width1 - cropWidth, height1));
-    	input2 = input2(Rect(width2 / 2 - blendingArea, 0, width2 - cropWidth, height2));
-
-    	width1 = input1.cols;
-    	width2 = input2.cols;
-
-    	int blendWidth = width1 + width2 - blendingArea;
-    	int blendHeight;
+    Mat blendImages(Mat blendedImages, Mat middleImg, int blendHeight, int blendWidth) {
 
     	float alpha;
 
-    	if (height1 > height2) blendHeight = height1;
-    	if (height1 < height2) blendHeight = height2;
-    	if (height1 == height2) blendHeight = height1;
+    	int width = middleImg.cols;
+    	int height = middleImg.rows;
+    	int heightBlended = blendedImages.rows;
 
-    	Mat blend1 = Mat::zeros(blendHeight, blendWidth, input1.type());
-    	Mat left(blend1, Rect(0, 0, width1, height1));
-    	input1.copyTo(left);
+    	int blend1Start = heightBlended/2 - height/2;
+    	int blend2Start = blend1Start + height - blendHeight;
 
-    	Mat blend2 = Mat::zeros(blendHeight, blendWidth, input2.type());
-    	Mat right(blend2, Rect(width1 - blendingArea, blendHeight/2- height2/2, width2, height2));
-    	input2.copyTo(right);
+    	//Pravljenje prednje slike(cista kropovana panorama)
+    	Mat frontImg = Mat::zeros(heightBlended, width, middleImg.type());
+    	Mat temp(frontImg, Rect(0, blend1Start, width, height));
+    	middleImg.copyTo(temp);
 
-    	output = Mat::zeros(blendHeight, blendWidth, input1.type());
+    	//Spajanje svega u jednu sliku koja sluzi kao pozadinska
+    	Mat backImg = blendedImages.clone();
+    	Mat temp4(backImg, Rect(0, blend1Start, width, height));
+    	middleImg.copyTo(temp4);
 
-    	cv::addWeighted(blend1, 1.0, blend2, 1.0, 0.0, output);
+    	//Pravljenje delica koji se kopira sa desne ivice na levu da bi se blendovao
+    	Mat backImgTemp = backImg.clone();
+    	backImgTemp = backImgTemp(Rect(width - blendWidth, 0, blendWidth, heightBlended));
 
-    	for (int i = width1 - blendingArea; i < width1; i++)
+    	Mat backImgHoriz = backImg.clone();
+    	Mat temp2(backImgHoriz, Rect(0, 0, blendWidth, heightBlended));
+    	backImgTemp.copyTo(temp2);
+
+    	Mat finalImg = backImg.clone();
+
+    	//Prolazak kroz horizontalne ivice
+    	for (int i = 0; i < width; i++)
     	{
-    		for (int j = 0; j < blendHeight; j++)
+    		//Gornja ivica
+    		for (int j = blend1Start; j < blend1Start + blendHeight; j++)
     		{
-    			alpha = 1 - ((i - width1 + blendingArea) * (1 / blendingArea));
+    			alpha = 1 - (j - blend1Start) * (static_cast<float>(1) / blendHeight);
 
-    			output.at<Vec3b>(j, i)[0] = (int)(blend1.at<Vec3b>(j, i)[0] * alpha + blend2.at<Vec3b>(j, i)[0] * (1 - alpha));
-    			output.at<Vec3b>(j, i)[1] = (int)(blend1.at<Vec3b>(j, i)[1] * alpha + blend2.at<Vec3b>(j, i)[1] * (1 - alpha));
-    			output.at<Vec3b>(j, i)[2] = (int)(blend1.at<Vec3b>(j, i)[2] * alpha + blend2.at<Vec3b>(j, i)[2] * (1 - alpha));
+    			finalImg.at<Vec3b>(j, i)[0] = (int)(blendedImages.at<Vec3b>(j, i)[0] * alpha) + backImg.at<Vec3b>(j, i)[0] * (1 - alpha);
+    			finalImg.at<Vec3b>(j, i)[1] = (int)(blendedImages.at<Vec3b>(j, i)[1] * alpha) + backImg.at<Vec3b>(j, i)[1] * (1 - alpha);
+    			finalImg.at<Vec3b>(j, i)[2] = (int)(blendedImages.at<Vec3b>(j, i)[2] * alpha) + backImg.at<Vec3b>(j, i)[2] * (1 - alpha);
+    		}
+
+    		//Donja ivica
+    		for (int j = blend2Start; j < blend2Start + blendHeight; j++)
+    		{
+    			alpha = (j - blend2Start) * (static_cast<float>(1) / blendHeight);
+
+    			finalImg.at<Vec3b>(j, i)[0] = (int)(blendedImages.at<Vec3b>(j, i)[0] * alpha) + backImg.at<Vec3b>(j, i)[0] * (1 - alpha);
+    			finalImg.at<Vec3b>(j, i)[1] = (int)(blendedImages.at<Vec3b>(j, i)[1] * alpha) + backImg.at<Vec3b>(j, i)[1] * (1 - alpha);
+    			finalImg.at<Vec3b>(j, i)[2] = (int)(blendedImages.at<Vec3b>(j, i)[2] * alpha) + backImg.at<Vec3b>(j, i)[2] * (1 - alpha);
     		}
     	}
-    }
 
-    void blendVertical(Mat input1, Mat input2, Mat& output)
-    {
-    	double p = (double)heightAfterResize*0.33; //preklop u pikselima
-    	float alpha;
+    	Mat final2Img = finalImg.clone();
 
-    	int width1 = input1.cols;
-    	int width2 = input2.cols;
-    	int height1 = input1.rows;
-    	int height2 = input2.rows;
-
-    	int blendWidth;
-
-    	int blendHeight = input1.rows + input2.rows - p;
-
-    	if (width1 > width2) blendWidth = width1;
-    	if (width1 < width2) blendWidth = width2;
-    	if (width1 == width2) blendWidth = width1;
-
-    	Mat blend1 = Mat::zeros(blendHeight, blendWidth, input1.type());
-    	Mat left(blend1, Rect(0, 0, width1, height1));
-    	input1.copyTo(left);
-
-    	Mat blend2 = Mat::zeros(blendHeight, blendWidth, input2.type());
-    	Mat right(blend2, Rect(0, height1 - p, width2, height2));
-    	input2.copyTo(right);
-
-    	output = cv::Mat::zeros(blendHeight, blendWidth, input1.type());
-
-    	cv::addWeighted(blend1, 1.0, blend2, 1.0, 0.0, output);
-
+    	//Prolazak kroz jednu vertikalnu ivicu
     	for (int i = 0; i < blendWidth; i++)
     	{
-    		for (int j = height1 - p; j < height1; j++)
+    		for (int j = 0; j < heightBlended; j++)
     		{
-    			alpha = 1 - ((j - (height1 - p)) * (1 / p));
+    			alpha = i * (static_cast<float>(1) / blendWidth);
 
-    			output.at<Vec3b>(j, i)[0] = (int)(blend1.at<Vec3b>(j, i)[0] * alpha + blend2.at<Vec3b>(j, i)[0] * (1 - alpha));
-    			output.at<Vec3b>(j, i)[1] = (int)(blend1.at<Vec3b>(j, i)[1] * alpha + blend2.at<Vec3b>(j, i)[1] * (1 - alpha));
-    			output.at<Vec3b>(j, i)[2] = (int)(blend1.at<Vec3b>(j, i)[2] * alpha + blend2.at<Vec3b>(j, i)[2] * (1 - alpha));
+    			final2Img.at<Vec3b>(j, i)[0] = (int)(finalImg.at<Vec3b>(j, i)[0] * alpha + backImgHoriz.at<Vec3b>(j, i)[0] * (1 - alpha));
+    			final2Img.at<Vec3b>(j, i)[1] = (int)(finalImg.at<Vec3b>(j, i)[1] * alpha + backImgHoriz.at<Vec3b>(j, i)[1] * (1 - alpha));
+    			final2Img.at<Vec3b>(j, i)[2] = (int)(finalImg.at<Vec3b>(j, i)[2] * alpha + backImgHoriz.at<Vec3b>(j, i)[2] * (1 - alpha));
     		}
     	}
-    }
 
-    Mat processImage(Mat img, string angleTilt, string angleLean)
-    {
-    	float ratio = (float)img.cols / (float)img.rows;
-    	int scaleHeight = heightAfterResize;
-    	int scaleWidth = scaleHeight * ratio;
-    	resize(img, img, Size(scaleWidth, scaleHeight), INTER_CUBIC);
 
-    	// rotacija
-    	double tilt = stod(angleTilt) * -1.;
-    	Point2f center(img.cols / 2., img.rows / 2.);
-    	Mat rotat_mat = getRotationMatrix2D(center, tilt, 1.0);
-    	warpAffine(img, img, rotat_mat, Size(scaleWidth, scaleHeight));
 
-    	// translacija
-    	double offset = stod(angleLean) * 10;
-    	Mat trans_mat = (Mat_<double>(2, 3) << 1, 0, 0, 0, 1, offset);
-    	warpAffine(img, img, trans_mat, Size(scaleWidth, scaleHeight + abs(offset)));
 
-    	return img;
+    	return final2Img;
     }
 
 
-    void stitch_image(char* path, char* angleTilt, char* angleLean ) {
+    void stitch_image(char* path) {
 
-        //------------------------DEO SAMO ZA ANDROID---------------------
-        string angleLean_string = angleLean;
-        vector<string> anglesLean = getpathlist(angleLean_string);
-        string angleTilt_string = angleTilt;
-        vector<string> anglesTilt = getpathlist(angleTilt_string);
-        //----------------------------------------------------------------
+        // OPENCV KOD
 
+        //Ucitavanje slike i dobijanje velicina
+        	Mat img = imread(path);
+        	double heightOriginal = img.rows;
+        	double widthOriginal = img.cols;
+        	int blendHeight = heightOriginal*0.15;
+        	int blendWidth = widthOriginal * 0.03;
 
-        string finalPath(path + finalName);
-        	string topPath(path + topName);
-        	string bottomPath(path + bottomName);
+        	//Dobijanje pocetne i kranje koordinate za kropovanje(ovo se mora odraditi preko tensor flow-a da bi se dobile tacne koordinate)
+        	int cropStart = widthOriginal * 0.05;
+        	int cropEnd = (widthOriginal * 0.9125) - cropStart + blendWidth;
 
-        	Mat blendTopLastFrame, blendTopCurrentFrame, blendTopLayer;
-        	Mat blendBottomLastFrame, blendBottomCurrentFrame, blendBottomLayer;
+        	//Izracunavanje velicina finalne slike na osnovu kropovanih koordinata
+        	int heightAfter = heightOriginal * 2.63;
+        	int widthAfter = cropEnd;
 
-        	for (int i = 1; i < imgNumb; i++)
-        	{
-        		if (i == 1)
-        		{
-        			blendTopLastFrame = processImage((imread(path + to_string(i - 1) + "-top.jpg")), anglesTilt[i - 1], anglesLean[i - 1]);
-        		}
+        	//Izracunavanje visina za watermark i za blurovane delove
+        	int watermarkHeight = heightAfter * 0.15;
+        	int cropBlurredHeight = heightAfter / 2 - heightOriginal / 2 - watermarkHeight;
 
-        		Mat blendTopCurrentFrame = imread(path + to_string(i) + "-top.jpg");
+        	//Kropovanje slike
+        	Mat imgCrop = img(Rect(cropStart, 0, cropEnd, heightOriginal));
+        	Mat imgCropTempTop = imgCrop.clone();
+        	Mat imgCropTempBottom = imgCrop.clone();
 
-        		if (blendTopCurrentFrame.empty())
-        		{
-        			blendingAngle = blendingAngle + blendingAngleStep;
-        		}
+        	//Gornji blurovani deo
+        	Mat imgCropTop = imgCropTempTop(Rect( 0, 0, widthAfter, heightOriginal *0.05));
+        	flip(imgCropTop, imgCropTop, 0);
+        	resize(imgCropTop, imgCropTop, Size(widthAfter, cropBlurredHeight + blendHeight));
+        	Mat imgCropTopBlurred;
+        	blur(imgCropTop, imgCropTopBlurred, Size(150, 150));
 
-        		if (!blendTopCurrentFrame.empty())
-        		{
+        	//Donji blurovani deo
+        	Mat imgCropBottom = imgCropTempBottom(Rect(0, heightOriginal * 0.8, widthAfter, heightOriginal * 0.2));
+        	flip(imgCropBottom, imgCropBottom, 0);
+        	resize(imgCropBottom, imgCropBottom, Size(widthAfter, cropBlurredHeight + blendHeight));
+        	Mat imgCropBottomBlurred;
+        	blur(imgCropBottom, imgCropBottomBlurred, Size(150, 150));
 
-        			blendingAngle = blendingAngleStep;
+        	//Spajanje svih delova na glavnu veliku sliku
+        	Mat imgFullSize = Mat(heightAfter, widthAfter, CV_8UC3, Scalar(168, 228, 19));
 
-        			blendTopCurrentFrame = processImage(blendTopCurrentFrame, anglesTilt[i], anglesLean[i]);
+        	Mat topImage(imgFullSize, Rect(0, watermarkHeight, widthAfter, imgCropTopBlurred.rows));
+        	imgCropTopBlurred.copyTo(topImage);
 
-        			blendHorizontal(blendTopLastFrame, blendTopCurrentFrame, blendTopLayer);
+        	Mat bottomImage(imgFullSize, Rect(0, heightAfter/2 + heightOriginal/2 - blendHeight, widthAfter, imgCropBottomBlurred.rows));
+        	imgCropBottomBlurred.copyTo(bottomImage);
 
-        			blendTopLastFrame = blendTopLayer.clone();
+        	Mat finalImage = blendImages(imgFullSize, imgCrop, blendHeight, blendWidth);
+        	Mat finalImageCropped = finalImage(Rect(0, 0, finalImage.cols - blendWidth, finalImage.rows));
 
-        			//imwrite(path + to_string(i) + "blend-top.jpg", blendTopLayer); //debug
-        		}
-        	}
-
-        	blendingAngle = blendingAngleStep;
-
-        	for (int i = 1; i < imgNumb; i++)
-        	{
-        		if (i == 1)
-        		{
-        			blendBottomLastFrame = processImage((imread(path + to_string(i - 1) + "-bottom.jpg")), anglesTilt[i - 1], anglesLean[i - 1]);
-        		}
-
-        		Mat blendBottomCurrentFrame = imread(path + to_string(i) + "-bottom.jpg");
-
-        		if (blendBottomCurrentFrame.empty())
-        		{
-        			blendingAngle = blendingAngle + blendingAngleStep;
-        		}
-
-        		if (!blendBottomCurrentFrame.empty())
-        		{
-
-        			blendingAngle = blendingAngleStep;
-
-        			blendBottomCurrentFrame = processImage(blendBottomCurrentFrame, anglesTilt[i], anglesLean[i]);
-
-        			blendHorizontal(blendBottomLastFrame, blendBottomCurrentFrame, blendBottomLayer);
-
-        			blendBottomLastFrame = blendBottomLayer.clone();
-
-        			//imwrite(path + to_string(i) + "blend-bottom.jpg", blendBottomLayer); //debug
-        		}
-        	}
-
-        	Mat finalTopCrop, finalBottomCrop, finalOutput;
-
-        	finalTopCrop = blendTopLayer(Rect(350, 0, blendTopLayer.cols - 600, blendTopLayer.rows));
-        	finalBottomCrop = blendBottomLayer(Rect(350, 0, blendBottomLayer.cols - 600, blendBottomLayer.rows));
-
-        	imwrite(topPath, finalTopCrop);
-        	imwrite(bottomPath, finalBottomCrop);
-
-        	blendVertical(finalTopCrop, finalTopCrop, finalOutput);
-
-        	imwrite(finalPath, finalOutput);
+        	//Kraj i cuvanje slike
+        	imwrite( path, finalImageCropped);
 
         //-----------------------------------------------------------------------------------------
     }

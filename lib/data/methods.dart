@@ -4,11 +4,11 @@ import 'package:ffi/ffi.dart';
 import 'package:opencv_awesome/modal/ProcessImage.dart';
 
  typedef _version_func = Pointer<Utf8> Function();
- typedef _stitch_image_func = Void Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+ typedef _stitch_image_func = Void Function(Pointer<Utf8>);
 
  // Dart function signatures
  typedef _VersionFunc = Pointer<Utf8> Function();
- typedef _StitchImageFunc = void Function(Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+ typedef _StitchImageFunc = void Function(Pointer<Utf8>);
 
 
  // Getting a library that holds needed symbols
@@ -26,7 +26,7 @@ import 'package:opencv_awesome/modal/ProcessImage.dart';
 
 class Methods{
   static stitch(ProcessImageArguments args)async {
-   _stitchImage( args.path.toNativeUtf8(), args.angleTilt.toNativeUtf8(), args.angleLean.toNativeUtf8());
+   _stitchImage(args.path.toNativeUtf8());
   }
 
 }
