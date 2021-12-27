@@ -12,9 +12,9 @@ class OpencvAwesome {
     return version;
   }
 
- static Future<void> generatePanorama(String path, List<String> angleTilt, List<String> angleLean) async {
+ static Future<void> cropAndBlur(String path) async {
     final port = ReceivePort();
-    final args = ProcessImageArguments(path, angleTilt.toString(), angleLean.toString());
+    final args = ProcessImageArguments(path);
     Isolate.spawn<ProcessImageArguments>(
         Methods.stitch,
         args,
