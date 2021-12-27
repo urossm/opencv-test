@@ -130,57 +130,59 @@ struct tokens: ctype<char>
         // OPENCV KOD
 
         //Ucitavanje slike i dobijanje velicina
-        	Mat img = imread(path + ".jpg");
-        	double heightOriginal = img.rows;
-        	double widthOriginal = img.cols;
-        	int blendHeight = heightOriginal*0.15;
-        	int blendWidth = widthOriginal * 0.03;
+        string pathString =  path;
 
-        	//Dobijanje pocetne i kranje koordinate za kropovanje(ovo se mora odraditi preko tensor flow-a da bi se dobile tacne koordinate)
-        	int cropStart = widthOriginal * 0.05;
-        	int cropEnd = (widthOriginal * 0.9125) - cropStart + blendWidth;
+        Mat img = imread(pathString + ".jpg");
+        double heightOriginal = img.rows;
+        double widthOriginal = img.cols;
+        int blendHeight = heightOriginal*0.15;
+        int blendWidth = widthOriginal * 0.03;
 
-        	//Izracunavanje velicina finalne slike na osnovu kropovanih koordinata
-        	int heightAfter = heightOriginal * 2.63;
-        	int widthAfter = cropEnd;
+        //Dobijanje pocetne i kranje koordinate za kropovanje(ovo se mora odraditi preko tensor flow-a da bi se dobile tacne koordinate)
+        int cropStart = widthOriginal * 0.05;
+        int cropEnd = (widthOriginal * 0.9125) - cropStart + blendWidth;
 
-        	//Izracunavanje visina za watermark i za blurovane delove
-        	int watermarkHeight = heightAfter * 0.15;
-        	int cropBlurredHeight = heightAfter / 2 - heightOriginal / 2 - watermarkHeight;
+        //Izracunavanje velicina finalne slike na osnovu kropovanih koordinata
+        int heightAfter = heightOriginal * 2.63;
+        int widthAfter = cropEnd;
 
-        	//Kropovanje slike
-        	Mat imgCrop = img(Rect(cropStart, 0, cropEnd, heightOriginal));
-        	Mat imgCropTempTop = imgCrop.clone();
-        	Mat imgCropTempBottom = imgCrop.clone();
+        //Izracunavanje visina za watermark i za blurovane delove
+        int watermarkHeight = heightAfter * 0.15;
+        int cropBlurredHeight = heightAfter / 2 - heightOriginal / 2 - watermarkHeight;
 
-        	//Gornji blurovani deo
-        	Mat imgCropTop = imgCropTempTop(Rect( 0, 0, widthAfter, heightOriginal *0.05));
-        	flip(imgCropTop, imgCropTop, 0);
-        	resize(imgCropTop, imgCropTop, Size(widthAfter, cropBlurredHeight + blendHeight));
-        	Mat imgCropTopBlurred;
-        	blur(imgCropTop, imgCropTopBlurred, Size(150, 150));
+        //Kropovanje slike
+        Mat imgCrop = img(Rect(cropStart, 0, cropEnd, heightOriginal));
+        Mat imgCropTempTop = imgCrop.clone();
+        Mat imgCropTempBottom = imgCrop.clone();
 
-        	//Donji blurovani deo
-        	Mat imgCropBottom = imgCropTempBottom(Rect(0, heightOriginal * 0.8, widthAfter, heightOriginal * 0.2));
-        	flip(imgCropBottom, imgCropBottom, 0);
-        	resize(imgCropBottom, imgCropBottom, Size(widthAfter, cropBlurredHeight + blendHeight));
-        	Mat imgCropBottomBlurred;
-        	blur(imgCropBottom, imgCropBottomBlurred, Size(150, 150));
+        //Gornji blurovani deo
+        Mat imgCropTop = imgCropTempTop(Rect( 0, 0, widthAfter, heightOriginal *0.05));
+        flip(imgCropTop, imgCropTop, 0);
+        resize(imgCropTop, imgCropTop, Size(widthAfter, cropBlurredHeight + blendHeight));
+        Mat imgCropTopBlurred;
+        blur(imgCropTop, imgCropTopBlurred, Size(150, 150));
 
-        	//Spajanje svih delova na glavnu veliku sliku
-        	Mat imgFullSize = Mat(heightAfter, widthAfter, CV_8UC3, Scalar(168, 228, 19));
+        //Donji blurovani deo
+        Mat imgCropBottom = imgCropTempBottom(Rect(0, heightOriginal * 0.8, widthAfter, heightOriginal * 0.2));
+        flip(imgCropBottom, imgCropBottom, 0);
+        resize(imgCropBottom, imgCropBottom, Size(widthAfter, cropBlurredHeight + blendHeight));
+        Mat imgCropBottomBlurred;
+        blur(imgCropBottom, imgCropBottomBlurred, Size(150, 150));
 
-        	Mat topImage(imgFullSize, Rect(0, watermarkHeight, widthAfter, imgCropTopBlurred.rows));
-        	imgCropTopBlurred.copyTo(topImage);
+        //Spajanje svih delova na glavnu veliku sliku
+        Mat imgFullSize = Mat(heightAfter, widthAfter, CV_8UC3, Scalar(168, 228, 19));
 
-        	Mat bottomImage(imgFullSize, Rect(0, heightAfter/2 + heightOriginal/2 - blendHeight, widthAfter, imgCropBottomBlurred.rows));
-        	imgCropBottomBlurred.copyTo(bottomImage);
+        Mat topImage(imgFullSize, Rect(0, watermarkHeight, widthAfter, imgCropTopBlurred.rows));
+        imgCropTopBlurred.copyTo(topImage);
 
-        	Mat finalImage = blendImages(imgFullSize, imgCrop, blendHeight, blendWidth);
-        	Mat finalImageCropped = finalImage(Rect(0, 0, finalImage.cols - blendWidth, finalImage.rows));
+        Mat bottomImage(imgFullSize, Rect(0, heightAfter/2 + heightOriginal/2 - blendHeight, widthAfter, imgCropBottomBlurred.rows));
+        imgCropBottomBlurred.copyTo(bottomImage);
 
-        	//Kraj i cuvanje slike
-        	imwrite( path + "-edited.jpg", finalImageCropped);
+        Mat finalImage = blendImages(imgFullSize, imgCrop, blendHeight, blendWidth);
+        Mat finalImageCropped = finalImage(Rect(0, 0, finalImage.cols - blendWidth, finalImage.rows));
+
+        //Kraj i cuvanje slike
+        imwrite( pathString + "-edited.jpg", finalImageCropped);
 
         //-----------------------------------------------------------------------------------------
     }
