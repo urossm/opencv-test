@@ -130,7 +130,7 @@ struct tokens: ctype<char>
         // OPENCV KOD
 
         //Ucitavanje slike i dobijanje velicina
-        	Mat img = imread(path);
+        	Mat img = imread(path + ".jpg");
         	double heightOriginal = img.rows;
         	double widthOriginal = img.cols;
         	int blendHeight = heightOriginal*0.15;
@@ -180,7 +180,7 @@ struct tokens: ctype<char>
         	Mat finalImageCropped = finalImage(Rect(0, 0, finalImage.cols - blendWidth, finalImage.rows));
 
         	//Kraj i cuvanje slike
-        	imwrite( path, finalImageCropped);
+        	imwrite( path + "-edited.jpg", finalImageCropped);
 
         //-----------------------------------------------------------------------------------------
     }
