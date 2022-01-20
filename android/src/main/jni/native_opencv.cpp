@@ -118,9 +118,6 @@ struct tokens: ctype<char>
     		}
     	}
 
-
-
-
     	return final2Img;
     }
 
@@ -130,59 +127,85 @@ struct tokens: ctype<char>
         // OPENCV KOD
 
         //Ucitavanje slike i dobijanje velicina
-        string pathString =  path;
+        string pathString = path;
 
-        Mat img = imread(pathString + ".jpg");
-        double heightOriginal = img.rows;
-        double widthOriginal = img.cols;
-        int blendHeight = heightOriginal*0.15;
-        int blendWidth = widthOriginal * 0.03;
+        __android_log_print(ANDROID_LOG_VERBOSE,"+++++++++++++++++OPENCV+++++++++++++++++", path);
 
-        //Dobijanje pocetne i kranje koordinate za kropovanje(ovo se mora odraditi preko tensor flow-a da bi se dobile tacne koordinate)
-        int cropStart = widthOriginal * 0.05;
-        int cropEnd = (widthOriginal * 0.9125) - cropStart + blendWidth;
+        Mat img = imread(pathString + "panoRaw.png");
+        Mat logo = imread(pathString + "logoRaw.png");
 
-        //Izracunavanje velicina finalne slike na osnovu kropovanih koordinata
-        int heightAfter = heightOriginal * 2.63;
-        int widthAfter = cropEnd;
+        if(logo.empty()){
+            __android_log_print(ANDROID_LOG_VERBOSE,"+++++++++++++++++OPENCV+++++++++++++++++", "SLIKA LOGOA NIJE UCITANA!");
+        }
+        if(img.empty()){
+            __android_log_print(ANDROID_LOG_VERBOSE,"+++++++++++++++++OPENCV+++++++++++++++++", "SLIKA PANORAME NIJE UCITANA!");
+        }
 
-        //Izracunavanje visina za watermark i za blurovane delove
-        int watermarkHeight = heightAfter * 0.15;
-        int cropBlurredHeight = heightAfter / 2 - heightOriginal / 2 - watermarkHeight;
+        if(!img.empty() && !logo.empty()){
+            double heightOriginal = img.rows;
+            double widthOriginal = img.cols;
+            int blendHeight = heightOriginal*0.03;
+            int blendWidth = widthOriginal * 0.02;
 
-        //Kropovanje slike
-        Mat imgCrop = img(Rect(cropStart, 0, cropEnd, heightOriginal));
-        Mat imgCropTempTop = imgCrop.clone();
-        Mat imgCropTempBottom = imgCrop.clone();
+            //Dobijanje pocetne i kranje koordinate za kropovanje(ovo se mora odraditi preko tensor flow-a da bi se dobile tacne koordinate)
+            int cropStart = widthOriginal * 0.05;
+            int cropEnd = (widthOriginal * 0.9625) - cropStart + blendWidth;
 
-        //Gornji blurovani deo
-        Mat imgCropTop = imgCropTempTop(Rect( 0, 0, widthAfter, heightOriginal *0.05));
-        flip(imgCropTop, imgCropTop, 0);
-        resize(imgCropTop, imgCropTop, Size(widthAfter, cropBlurredHeight + blendHeight));
-        Mat imgCropTopBlurred;
-        blur(imgCropTop, imgCropTopBlurred, Size(150, 150));
+            //Izracunavanje velicina finalne slike na osnovu kropovanih koordinata
+            int heightAfter = heightOriginal * 1.65;
+            int widthAfter = cropEnd;
 
-        //Donji blurovani deo
-        Mat imgCropBottom = imgCropTempBottom(Rect(0, heightOriginal * 0.8, widthAfter, heightOriginal * 0.2));
-        flip(imgCropBottom, imgCropBottom, 0);
-        resize(imgCropBottom, imgCropBottom, Size(widthAfter, cropBlurredHeight + blendHeight));
-        Mat imgCropBottomBlurred;
-        blur(imgCropBottom, imgCropBottomBlurred, Size(150, 150));
+            //Izracunavanje visina za watermark i za blurovane delove
+            int watermarkHeight = heightAfter * 0.18;
+            int cropBlurredHeight = heightAfter / 2 - heightOriginal / 2 - watermarkHeight;
 
-        //Spajanje svih delova na glavnu veliku sliku
-        Mat imgFullSize = Mat(heightAfter, widthAfter, CV_8UC3, Scalar(168, 228, 19));
+            //Kropovanje slike
+            Mat imgCrop = img(Rect(cropStart, 0, cropEnd, heightOriginal));
+            Mat imgCropTempTop = imgCrop.clone();
+            Mat imgCropTempBottom = imgCrop.clone();
 
-        Mat topImage(imgFullSize, Rect(0, watermarkHeight, widthAfter, imgCropTopBlurred.rows));
-        imgCropTopBlurred.copyTo(topImage);
+            //Gornji blurovani deo
+            Mat imgCropTop = imgCropTempTop(Rect( 0, 0, widthAfter, heightOriginal *0.05));
+            flip(imgCropTop, imgCropTop, 0);
+            resize(imgCropTop, imgCropTop, Size(widthAfter, cropBlurredHeight + blendHeight));
+            Mat imgCropTopBlurred;
+            blur(imgCropTop, imgCropTopBlurred, Size(150, 150));
 
-        Mat bottomImage(imgFullSize, Rect(0, heightAfter/2 + heightOriginal/2 - blendHeight, widthAfter, imgCropBottomBlurred.rows));
-        imgCropBottomBlurred.copyTo(bottomImage);
+            //Donji blurovani deo
+            Mat imgCropBottom = imgCropTempBottom(Rect(0, heightOriginal * 0.8, widthAfter, heightOriginal * 0.2));
+            flip(imgCropBottom, imgCropBottom, 0);
+            resize(imgCropBottom, imgCropBottom, Size(widthAfter, cropBlurredHeight + blendHeight));
+            Mat imgCropBottomBlurred;
+            blur(imgCropBottom, imgCropBottomBlurred, Size(150, 150));
 
-        Mat finalImage = blendImages(imgFullSize, imgCrop, blendHeight, blendWidth);
-        Mat finalImageCropped = finalImage(Rect(0, 0, finalImage.cols - blendWidth, finalImage.rows));
+            //Spajanje svih delova na glavnu veliku sliku
+            Mat imgFullSize = Mat(heightAfter, widthAfter, CV_8UC3, Scalar(168, 228, 19));
 
-        //Kraj i cuvanje slike
-        imwrite( pathString + "-edited.jpg", finalImageCropped);
+            Mat topImage(imgFullSize, Rect(0, watermarkHeight, widthAfter, imgCropTopBlurred.rows));
+            imgCropTopBlurred.copyTo(topImage);
+
+            Mat bottomImage(imgFullSize, Rect(0, heightAfter/2 + heightOriginal/2 - blendHeight, widthAfter, imgCropBottomBlurred.rows));
+            imgCropBottomBlurred.copyTo(bottomImage);
+
+            Mat finalImage = blendImages(imgFullSize, imgCrop, blendHeight, blendWidth);
+            Mat finalImageCropped = finalImage(Rect(0, 0, finalImage.cols - blendWidth, finalImage.rows));
+
+            int logoWidth = finalImageCropped.cols;
+            int logoHeight = watermarkHeight;
+            Mat logoBottomLoaded = logo.clone();
+            Mat logoTopLoaded;
+            resize(logoBottomLoaded, logoBottomLoaded, Size(logoWidth, logoHeight), INTER_CUBIC);
+            rotate(logoBottomLoaded, logoTopLoaded, ROTATE_180);
+
+            Mat logoBottom(finalImageCropped, Rect(0, finalImageCropped.rows - logoHeight, logoWidth, logoHeight));
+            logoBottomLoaded.copyTo(logoBottom);
+
+            Mat logoTop(finalImageCropped, Rect(0, 0, logoWidth, logoHeight));
+            logoTopLoaded.copyTo(logoTop);
+
+            //Kraj i cuvanje slike
+            imwrite( pathString + "panoFinal.jpg", finalImageCropped);
+        }
 
         //-----------------------------------------------------------------------------------------
     }
