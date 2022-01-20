@@ -125,6 +125,7 @@ struct tokens: ctype<char>
     void stitch_image(char* path) {
 
         // OPENCV KOD
+        __android_log_print(ANDROID_LOG_VERBOSE,"+++++++++++++++++OPENCV+++++++++++++++++", "OBRADA POCELA");
 
         //Ucitavanje slike i dobijanje velicina
         string pathString = path;
@@ -205,6 +206,7 @@ struct tokens: ctype<char>
 
             //Kraj i cuvanje slike
             imwrite( pathString + "/panoFinal.jpg", finalImageCropped);
+            __android_log_print(ANDROID_LOG_VERBOSE,"+++++++++++++++++OPENCV+++++++++++++++++", "SLIKA OBRADJENA!");
         }
 
         //-----------------------------------------------------------------------------------------
