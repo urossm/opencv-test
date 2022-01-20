@@ -131,8 +131,8 @@ struct tokens: ctype<char>
 
         __android_log_print(ANDROID_LOG_VERBOSE,"+++++++++++++++++OPENCV+++++++++++++++++", path);
 
-        Mat img = imread(pathString + "panoRaw.png");
-        Mat logo = imread(pathString + "logoRaw.png");
+        Mat img = imread(pathString + "/panoRaw.png");
+        Mat logo = imread(pathString + "/logoRaw.png");
 
         if(logo.empty()){
             __android_log_print(ANDROID_LOG_VERBOSE,"+++++++++++++++++OPENCV+++++++++++++++++", "SLIKA LOGOA NIJE UCITANA!");
@@ -204,7 +204,7 @@ struct tokens: ctype<char>
             logoTopLoaded.copyTo(logoTop);
 
             //Kraj i cuvanje slike
-            imwrite( pathString + "panoFinal.jpg", finalImageCropped);
+            imwrite( pathString + "/panoFinal.jpg", finalImageCropped);
         }
 
         //-----------------------------------------------------------------------------------------
