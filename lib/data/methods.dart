@@ -25,7 +25,7 @@ import 'package:opencv_awesome/modal/ProcessImage.dart';
      .asFunction();
 
 class Methods{
-  static stitch(ProcessImageArguments args)async {
+  static Future<void> stitch(ProcessImageArguments args) async {
    _stitchImage(args.path.toNativeUtf8());
   }
 

@@ -150,7 +150,7 @@ struct tokens: ctype<char>
 
             //Dobijanje pocetne i kranje koordinate za kropovanje(ovo se mora odraditi preko tensor flow-a da bi se dobile tacne koordinate)
             int cropStart = widthOriginal * 0.05;
-            int cropEnd = (widthOriginal * 0.9625) - cropStart + blendWidth;
+            int cropEnd = (widthOriginal * 0.95) - cropStart + blendWidth;
 
             //Izracunavanje velicina finalne slike na osnovu kropovanih koordinata
             int heightAfter = heightOriginal * 1.65;
