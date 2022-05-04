@@ -745,15 +745,17 @@ extern "C" {
 
     int stitch_image(char* path) {
 
-        //Splitovanje argumenata i inicijalizacija promenljivih
-        array<string, 3> tokens = splitArguments(argument);
+        string arguments(path);
 
-        string path = tokens[0];
+        //Splitovanje argumenata i inicijalizacija promenljivih
+        array<string, 3> tokens = splitArguments(arguments);
+
+        string inputPath = tokens[0];
         int imagesPerRow = stoi(tokens[1]);
         int numberOfRows = stoi(tokens[2]);
 
-        string pathInput = path + "/src";
-        string pathFinal(path);
+        string pathInput = inputPath + "/src";
+        string pathFinal(inputPath);
 
         vector<Mat> finalImgsToStitch;
 
