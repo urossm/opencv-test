@@ -25,6 +25,7 @@ using namespace cv::detail;
 const float inlier_threshold = 2.5f; // Distance threshold to identify inliers with homography check
 const float nn_match_ratio = 0.8f;   // Nearest neighbor matching ratio
 
+#include <android/log.h>
 
 // Avoiding name mangling
 extern "C" {
