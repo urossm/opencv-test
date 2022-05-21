@@ -66,6 +66,9 @@ extern "C" {
         cv::Mat distCoeff;
         distCoeff = cv::Mat::zeros(4, 1, CV_64FC1);
 
+        // indices: k1, k2, p1, p2, k3, k4, k5, k6
+        // TODO: add your coefficients here!
+
         double k1 = 1e-5 * strength;
         double k2 = 0;
         double p1 = 0;
@@ -107,6 +110,9 @@ extern "C" {
         cv::Mat distCoeff;
         distCoeff = cv::Mat::zeros(4, 1, CV_64FC1);
 
+        // indices: k1, k2, p1, p2, k3, k4, k5, k6
+        // TODO: add your coefficients here!
+
         double k1 = 1e-5 * strength;
         double k2 = 0;
         double p1 = 0;
@@ -140,11 +146,11 @@ extern "C" {
         return imgFinal;
     }
 
-    array<string, 3> splitArguments(string argument) {
+    array<string, 4> splitArguments(string argument) {
 
         string delimiter = ";";
         size_t pos = 0;
-        array<string, 3> tokens;
+        array<string, 4> tokens;
 
         int i = 0;
 
@@ -155,7 +161,7 @@ extern "C" {
             i++;
         }
 
-        tokens[2] = argument;
+        tokens[3] = argument;
 
         return tokens;
     }
@@ -168,17 +174,11 @@ extern "C" {
 
         double img1width = finalImages[0].cols;
         double img1height = finalImages[0].rows;
+        double img2width = finalImages[1].cols;
+        double img2height = finalImages[1].rows;
 
-        double finalWidth = img1width + xOffset;
-        double finalHeight = img1height;
-
-        //Povecanje rezolucije druge slike da bude ista kao canvas
-        Mat translateMat1 = (Mat_<double>(2, 3) << 1, 0, 0, 0, 1, 0);
-        warpAffine(finalImages[0], finalImages[0], translateMat1, Size(finalWidth, finalHeight));
-
-        //Translacija druge slike
-        Mat translateMat2 = (Mat_<double>(2, 3) << 1, 0, xOffset, 0, 1, 0);
-        warpAffine(finalImages[1], finalImages[1], translateMat2, Size(finalWidth, finalHeight));
+        double finalWidth = img2width + xOffset;
+        double finalHeight = img2height;
 
         vector<UMat> sources(2);
         finalImages[0].convertTo(sources[0], CV_32F);
@@ -189,16 +189,12 @@ extern "C" {
 
         Size newSize = Size(finalWidth / scaleFactor, finalHeight / scaleFactor);
 
-        resize(sources[0], sources[0], newSize, INTER_CUBIC);
-        resize(sources[1], sources[1], newSize, INTER_CUBIC);
-
-        vector<Point> corners;
-        corners.push_back(Point(0, 0));
-        corners.push_back(Point(0, 0));
+        resize(sources[0], sources[0], Size(img1width / scaleFactor, img1height / scaleFactor), INTER_LINEAR);
+        resize(sources[1], sources[1], Size(img2width / scaleFactor, img2height / scaleFactor), INTER_LINEAR);
 
         vector<Point> cornersScaled;
         cornersScaled.push_back(Point(0, 0));
-        cornersScaled.push_back(Point(gap, 0));
+        cornersScaled.push_back(Point(xOffset / scaleFactor + gap, 0));
 
         vector<UMat> masks(2);
         Mat mask1(finalImages[0].size(), CV_8U, Scalar(255));
@@ -206,8 +202,8 @@ extern "C" {
         mask1.convertTo(masks[0], CV_8U);
         mask2.convertTo(masks[1], CV_8U);
 
-        resize(masks[0], masks[0], newSize);
-        resize(masks[1], masks[1], newSize);
+        resize(masks[0], masks[0], Size(img1width / scaleFactor, img1height / scaleFactor), INTER_LINEAR);
+        resize(masks[1], masks[1], Size(img2width / scaleFactor, img2height / scaleFactor), INTER_LINEAR);
 
         Ptr<SeamFinder> seam_finder = makePtr<detail::GraphCutSeamFinder>(GraphCutSeamFinderBase::COST_COLOR);
         seam_finder->find(sources, cornersScaled, masks);
@@ -217,8 +213,19 @@ extern "C" {
         finalMasks.push_back(masks[0].getMat(ACCESS_READ));
         finalMasks.push_back(masks[1].getMat(ACCESS_READ));
 
-        resize(finalMasks[0], finalMasks[0], Size(finalWidth, finalHeight), INTER_NEAREST);
-        resize(finalMasks[1], finalMasks[1], Size(finalWidth, finalHeight), INTER_NEAREST);
+        //Povecanje rezolucije druge slike da bude ista kao canvas
+        Mat translateMat1 = (Mat_<double>(2, 3) << 1, 0, 0, 0, 1, 0);
+        warpAffine(finalImages[0], finalImages[0], translateMat1, Size(finalWidth, finalHeight));
+
+        //Translacija druge slike
+        Mat translateMat2 = (Mat_<double>(2, 3) << 1, 0, xOffset, 0, 1, 0);
+        warpAffine(finalImages[1], finalImages[1], translateMat2, Size(finalWidth, finalHeight));
+
+        resize(finalMasks[0], finalMasks[0], Size(img1width, img1height), INTER_NEAREST);
+        resize(finalMasks[1], finalMasks[1], Size(img2width, img2height), INTER_NEAREST);
+
+        warpAffine(finalMasks[0], finalMasks[0], translateMat1, Size(finalWidth, finalHeight));
+        warpAffine(finalMasks[1], finalMasks[1], translateMat2, Size(finalWidth, finalHeight));
 
         Mat canvas(finalHeight, finalWidth, CV_8UC3);
         canvas.setTo(0);
@@ -299,16 +306,29 @@ extern "C" {
 
         //imwrite("test2/MASK1.jpg", blendMask);
 
-        rotate(canvas, canvas, ROTATE_90_CLOCKWISE);
+        return canvas;
+    }
 
-        Mat translateMatCanvas = (Mat_<double>(2, 3) << 1, 0, 150, 0, 1, 250);
-        warpAffine(canvas, canvas, translateMatCanvas, Size(canvas.cols + 300, canvas.rows + 500));
+    Mat undistortImg2Rings(Mat canvas) {
+        //Mat translateMatCanvas = (Mat_<double>(2, 3) << 1, 0, 150, 0, 1, 250);
+        //warpAffine(canvas, canvas, translateMatCanvas, Size(canvas.cols + 300, canvas.rows + 500));
 
         Mat canvasUndistorted = undistortImage(canvas, -1.2);
 
-        Mat canvasCropped = canvasUndistorted(Rect(150, 100, canvasUndistorted.cols-300, canvasUndistorted.rows - 200));
+        //Mat canvasCropped = canvasUndistorted(Rect(150, 100, canvasUndistorted.cols - 300, canvasUndistorted.rows - 200));
 
-        return canvasCropped;
+        return canvasUndistorted;
+    }
+
+    Mat undistortImg3Rings(Mat canvas) {
+        Mat translateMatCanvas = (Mat_<double>(2, 3) << 1, 0, 0, 0, 1, 0);
+        warpAffine(canvas, canvas, translateMatCanvas, Size(canvas.cols, canvas.rows));
+
+        Mat canvasUndistorted = undistortImage(canvas, -0.6);
+
+        //Mat canvasCropped = canvasUndistorted(Rect(150, 100, canvasUndistorted.cols - 300, canvasUndistorted.rows - 200));
+
+        return canvasUndistorted;
     }
 
     Mat stitch(vector<Mat> inputImages) {
@@ -705,10 +725,10 @@ extern "C" {
             }
         }
 
-        rotate(canvas, canvas, ROTATE_90_CLOCKWISE);
+        return canvas;
 
-        finalWidth = canvas.cols;
-        finalHeight = canvas.rows;
+        //finalWidth = canvas.cols;
+        //finalHeight = canvas.rows;
 
         //double canvasExpandWidth = finalWidth * 0.2 * 0;
         //double canvasExpandHeight = finalHeight * 0.4 * 0;
@@ -716,11 +736,11 @@ extern "C" {
         //Mat translateMatCanvas = (Mat_<double>(2, 3) << 1, 0, canvasExpandWidth/2, 0, 1, canvasExpandHeight/2);
         //warpAffine(canvas, canvas, translateMatCanvas, Size(finalWidth + canvasExpandWidth, finalHeight + canvasExpandHeight));
 
-        Mat canvasUndistorted = undistortImage(canvas, 0);
+        //Mat canvasUndistorted = undistortImage(canvas, 0);
 
         //Mat canvasCropped = canvasUndistorted(Rect(150, 100, canvasUndistorted.cols - 300, canvasUndistorted.rows - 200));
 
-        return canvasUndistorted;
+        //return canvasUndistorted;
 
         //Ovo otkomentarisati ako hocu sliku sa alfom
         //
@@ -749,17 +769,33 @@ extern "C" {
         string arguments(path);
 
         //Splitovanje argumenata i inicijalizacija promenljivih
-        array<string, 3> tokens = splitArguments(arguments);
+        array<string, 4> tokens = splitArguments(arguments);
 
         string inputPath = tokens[0];
         int imagesPerRow = stoi(tokens[1]);
         int numberOfRows = stoi(tokens[2]);
+        bool hasUltrawide;
 
+        if (tokens[3] == "true") {
+            hasUltrawide = true;
+        }
+        else {
+            hasUltrawide = false;
+        }
+
+        //Definisanje enumeracija za putanje
         string pathInput = inputPath + "/src";
-        string pathFinal(inputPath);
+        string pathFinal = inputPath + "/panoFinal.jpg";
+        string pathThumbnail = inputPath + "/thumbnail.jpg";
 
-        vector<Mat> finalImgsToStitch;
+        //Definisanje finalne velicine jednog frejma(slike) unutar finalne panoramske slike
+        int heightAfterResize = 1800;
+        int widthAfterCrop = 1000;
 
+        Mat finalPano(heightAfterResize, widthAfterCrop * imagesPerRow, CV_8UC3);
+        finalPano.setTo(0);
+
+        //Promenljiva koja govori da li je smer ucitavanja obrnut posto se slika u paternu gore-dole-dole-gore
         bool reversed = false;
 
         //Prolazak kroz sve slike gde prvo sticuje sve slike po vertikali i dodaje ih u niz
@@ -767,56 +803,157 @@ extern "C" {
 
             vector<Mat> imgsToStitch;
 
-            Mat imgTemp1, imgTemp2;
-
             //Proverava da li je smer ucitavanja obrnut posto se slika u paternu gore-dole-dole-gore
             //i onda na svake dve ucitane slike obrce smer ucitavanja pa se slike ucitavaju 1-2-4-3-5-6-8-7
             if (!reversed) {
                 for (int j = 0; j < numberOfRows; j++) {
                     Mat img = imread(pathInput + "/" + to_string(i + j) + ".jpg");
-                    rotate(img, img, ROTATE_90_COUNTERCLOCKWISE);
-                    imgsToStitch.push_back(img);
 
-                    if (j == 0) {
-                        imgTemp1 = img.clone();
+                    if (img.rows > img.cols) {
+                        rotate(img, img, ROTATE_90_COUNTERCLOCKWISE);
                     }
-                    else if (j == 1) {
-                        imgTemp2 = img.clone();
-                    }
+
+                    imgsToStitch.push_back(img);
                 }
                 reversed = true;
             }
             else {
                 for (int j = numberOfRows - 1; j >= 0; j--) {
                     Mat img = imread(pathInput + "/" + to_string(i + j) + ".jpg");
-                    rotate(img, img, ROTATE_90_COUNTERCLOCKWISE);
-                    imgsToStitch.push_back(img);
 
-                    if (j == 1) {
-                        imgTemp1 = img.clone();
+                    if (img.rows > img.cols) {
+                        rotate(img, img, ROTATE_90_COUNTERCLOCKWISE);
                     }
-                    else if (j == 0) {
-                        imgTemp2 = img.clone();
-                    }
+
+                    imgsToStitch.push_back(img);
                 }
                 reversed = false;
             }
 
-            Mat stitchedImg = stitch(imgsToStitch);
+            //Deo za sticovanje
 
-            if (!stitchedImg.empty()) {
-                //rotate(stitchedImg, stitchedImg, ROTATE_90_CLOCKWISE);
-                imwrite(pathFinal + to_string(i / 2) + ".jpg", stitchedImg);
+            Mat stitchedImg;
+
+            if (hasUltrawide) {
+                stitchedImg = stitch(imgsToStitch);
             }
             else {
-                Mat curvedImgTop = distortImage(imgTemp1, 0.5, 5);
-                Mat curvedImgBottom = distortImage(imgTemp2, 0.5, 5);
 
-                Mat finalImage = blendVertical(curvedImgTop, curvedImgBottom, 370);
+                vector<Mat> imgsToStitchTEMP;
 
-                imwrite(pathFinal + to_string(i / 2) + ".jpg", finalImage);
+                imgsToStitchTEMP.push_back(imgsToStitch[0]);
+                imgsToStitchTEMP.push_back(imgsToStitch[1]);
+
+                Mat stitchedImgTEMP = stitch(imgsToStitchTEMP);
+
+                if (!stitchedImgTEMP.empty()) {
+                    vector<Mat> imgsToStitchTEMP2;
+                    imgsToStitchTEMP2.push_back(stitchedImgTEMP);
+                    imgsToStitchTEMP2.push_back(imgsToStitch[2]);
+                    stitchedImg = stitch(imgsToStitchTEMP2);
+                }
             }
+
+            //Ako ne moze da sticuje, nek proba da blenduje
+
+            if (stitchedImg.empty()) {
+
+                Mat imgBlend0, imgBlend1, imgBlend2;
+
+                imgBlend0 = distortImage(imgsToStitch[0], 0.5, 5);
+                imgBlend1 = distortImage(imgsToStitch[1], 0.5, 5);
+
+                if (hasUltrawide) {
+                    Mat stitchedImgTEMP = blendVertical(imgBlend0, imgBlend1, 370);
+                    stitchedImg = undistortImg2Rings(stitchedImgTEMP);
+                }
+                else {
+                    imgBlend2 = distortImage(imgsToStitch[2], 0.5, 5);
+                    Mat stitchedImgTEMP = blendVertical(imgBlend0, imgBlend1, 420);
+                    Mat stitchedImgTEMP2 = blendVertical(stitchedImgTEMP, imgBlend2, 800);
+                    stitchedImg = undistortImg3Rings(stitchedImgTEMP2);
+                }
+                /*
+                Mat curvedImgTop, curvedImgMiddle, curvedImgBottom;
+                if (!reversed) {
+                    curvedImgTop = distortImage(imgsToStitch[0], 0.5, 5);
+                    curvedImgMiddle = distortImage(imgsToStitch[1], 0.5, 5);
+                    if (!hasUltrawide) {
+                        curvedImgBottom = distortImage(imgsToStitch[2], 0.5, 5);
+                    }
+                }
+                else {
+                    if (!hasUltrawide) {
+                        curvedImgTop = distortImage(imgsToStitch[0], 0.5, 5);
+                    }
+                    curvedImgMiddle = distortImage(imgsToStitch[1], 0.5, 5);
+                    curvedImgBottom = distortImage(imgsToStitch[2], 0.5, 5);
+                }
+
+                if (!reversed) {
+                    if (hasUltrawide) {
+                        Mat stitchedImgTEMP = blendVertical(imgsToStitch[0], imgsToStitch[1], 370);
+                        stitchedImg = undistortImg2Rings(stitchedImgTEMP);
+                    }
+                    else {
+                        Mat stitchedImgTEMP = blendVertical(imgsToStitch[0], imgsToStitch[1], 420);
+                        Mat stitchedImgTEMP2 = blendVertical(stitchedImgTEMP, imgsToStitch[2], 800);
+                        stitchedImg = undistortImg3Rings(stitchedImgTEMP2);
+                    }
+                }
+                else {
+                    if (hasUltrawide) {
+                        Mat stitchedImgTEMP = blendVertical(imgsToStitch[0], imgsToStitch[1], 370);
+                        stitchedImg = undistortImg2Rings(stitchedImgTEMP);
+                    }
+                    else {
+                        Mat stitchedImgTEMP = blendVertical(curvedImgMiddle, curvedImgBottom, 420);
+                        Mat stitchedImgTEMP2 = blendVertical(curvedImgTop, stitchedImgTEMP, 380);
+                        stitchedImg = undistortImg3Rings(stitchedImgTEMP2);
+                    }
+                }*/
+            }
+
+            if (stitchedImg.cols > stitchedImg.rows) {
+                rotate(stitchedImg, stitchedImg, ROTATE_90_CLOCKWISE);
+            }
+
+            int width = stitchedImg.cols;
+            int height = stitchedImg.rows;
+
+
+            if (i == 0) {
+                imwrite(pathThumbnail, stitchedImg);
+            }
+
+            double scaleFactor = static_cast<double>(heightAfterResize) / height;
+
+            resize(stitchedImg, stitchedImg, Size(width * scaleFactor, heightAfterResize), INTER_CUBIC);
+
+            int newWidth = stitchedImg.cols;
+
+            if (newWidth < widthAfterCrop) {
+                if (hasUltrawide) {
+                    resize(stitchedImg, stitchedImg, Size(widthAfterCrop, heightAfterResize), INTER_CUBIC);
+                }
+                else {
+                    //TODO Dodati kod ovde ako nema ultrawide a slika je uza nego sto je predvidjeno
+                    resize(stitchedImg, stitchedImg, Size(widthAfterCrop, heightAfterResize), INTER_CUBIC);
+                }
+            }
+            else {
+                int cropStart = (newWidth - widthAfterCrop) / 2;
+                Mat stitchedImgTemp = stitchedImg(Rect(cropStart, 0, widthAfterCrop, heightAfterResize));
+                stitchedImg = stitchedImgTemp.clone();
+            }
+
+            Mat stitchedImgROI(finalPano, Rect(i / numberOfRows * widthAfterCrop, 0, stitchedImg.cols, stitchedImg.rows));
+            stitchedImg.copyTo(stitchedImgROI);
         }
+
+        imwrite(pathFinal, finalPano, { IMWRITE_JPEG_QUALITY, 60 });
+
+        __android_log_print(ANDROID_LOG_VERBOSE,"+++++++++++++++++OPENCV+++++++++++++++++", "ZAVRSENO!!!");
 
         return 0;
 
